@@ -1,0 +1,81 @@
+name: Node.js Unit Test
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        type: string
+        description: 'Operator System, such as: ubuntu-latest,macos-latest'
+        default: 'ubuntu-latest, macos-latest, windows-latest'
+
+      version:
+        type: string
+        description: 'Node.js Version, such as 16, 18'
+        default: '16, 18'
+
+jobs:
+  Setup:
+    runs-on: ubuntu-latest
+    outputs:
+      os: ${{ steps.handler.outputs.os }}
+      version: ${{ steps.handler.outputs.version }}
+    steps:
+      - name: Set Env from Inputs
+        run: |
+          echo "INPUT_OS=${{ inputs.os }}" >> $GITHUB_ENV
+          echo "INPUT_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+
+      - name: Covert to Outputs
+        id: handler
+        shell: node {0}
+        run: |
+          const fs = require('fs');
+          const cfg = {
+            os: process.env.INPUT_OS.split(',').map(x => x.trim()),
+            version: process.env.INPUT_VERSION.split(',').map(x => x.trim()),
+          };
+
+          const output = `os=${JSON.stringify(cfg.os)}\nversion=${JSON.stringify(cfg.version)}`
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, output, { encoding: 'utf8' });
+
+          // fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `CI Config: \n\`\`\`md\n${JSON.stringify(cfg, null, 2)}\n\`\`\``, { encoding: 'utf8' });
+          console.log(output);
+
+
+  Test:
+    needs: Setup
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(needs.setup.outputs.os) }}
+        version: ${{ fromJSON(needs.setup.outputs.version) }}
+
+    name: test (${{ matrix.os }}, ${{ matrix.version }})
+    runs-on: ${{ matrix.os }}
+
+    concurrency:
+      group: ${{ github.workflow }}-#${{ github.event.pull_request.number || github.ref }}-(${{ matrix.os }}, ${{ matrix.version }})
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout Git Source
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.version }}
+        uses: actions/setup-node@v3
+        with:
+          version: ${{ matrix.version }}
+
+      - name: Install Dependencies
+        run: npm i --no-package-lock --no-fund
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Test
+        run: npm run ci
+
+      - name: Code Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

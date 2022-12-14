@@ -1,0 +1,57 @@
+name: Node.js Release
+
+on:
+  workflow_call:
+
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      # Checkout project repository
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm i --no-package-lock --no-fund
+
+      # Run Lint
+      - name: Run Lint
+        run: npm run lint
+
+      # Run Test Only
+      - name: Run Test
+        run: npm test
+
+      # Release
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v3
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          extra_plugins: |
+            conventional-changelog-conventionalcommits@5
+            @semantic-release/changelog@6
+            @semantic-release/git@10
+            @semantic-release/exec@6
+            ${{ github.workspace }}
+
+      - name: SUMMARY
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          echo ${{ steps.semantic.outputs.new_release_version }}
+          echo -e "${{ steps.semantic.outputs.new_release_notes }}" >> $GITHUB_STEP_SUMMARY
+

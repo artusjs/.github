@@ -1,0 +1,13 @@
+{
+  "name": "Node.js Release",
+  "description": "Release to Node.js registry",
+  "categories": [
+    "Node.js",
+    "npm"
+  ],
+  "filePatterns": [
+    "package.json$",
+    "^Dockerfile",
+    ".*\\.md$"
+  ]
+}
