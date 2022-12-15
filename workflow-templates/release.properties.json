@@ -3,7 +3,9 @@
   "description": "Release to Node.js registry",
   "categories": [
     "Node.js",
-    "npm"
+    "npm",
+    "artus",
+    "artusjs"
   ],
   "filePatterns": [
     "package.json$",

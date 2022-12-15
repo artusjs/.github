@@ -3,7 +3,9 @@
   "description": "Node.js CI Workflow",
   "categories": [
     "Node.js",
-    "unittest"
+    "unittest",
+    "artus",
+    "artusjs"
   ],
   "filePatterns": [
     "package.json$",
