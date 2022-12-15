@@ -1,0 +1,15 @@
+{
+  "name": "Node.js Unit Test",
+  "description": "Node.js CI Workflow",
+  "categories": [
+    "Node.js",
+    "unittest",
+    "artus",
+    "artusjs"
+  ],
+  "filePatterns": [
+    "package.json$",
+    "^Dockerfile",
+    ".*\\.md$"
+  ]
+}
