@@ -10,7 +10,7 @@ on:
 jobs:
   release:
     name: Node.js
-    uses: artusjs/github-actions/.github/workflows/node-release.yml@master
+    uses: artusjs/github-actions/.github/workflows/node-release.yml@v1
     # with:
       # checkTest: false
       # dryRun: true
